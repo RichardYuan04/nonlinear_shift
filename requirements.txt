@@ -1,0 +1,8 @@
+# Python dependencies for the notebooks in python/
+numpy
+pandas
+scipy
+scikit-learn
+statsmodels
+matplotlib
+seaborn

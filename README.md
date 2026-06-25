@@ -1,104 +1,84 @@
-# Nonlinear shift along the sensorimotor-association axis in brain responses to task performance
+# Nonlinear shift along the sensorimotor–association axis
 
-[![DOI](https://img.shields.io/badge/DOI-10.1016%2Fj.neuroimage.2026.121978-blue)](https://doi.org/10.1016/j.neuroimage.2026.121978)
-[![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey)](http://creativecommons.org/licenses/by/4.0/)
+Analysis code for:
 
-> 📄 **Official code repository for our paper published in *NeuroImage* (2026, open access).**
-> Yuan, Y., Zhang, B., Perkins, K., & Cao, F. (2026). *Nonlinear shift along the
-> sensorimotor-association-axis in brain responses to task performance.*
-> **NeuroImage, 334, 121978.** https://doi.org/10.1016/j.neuroimage.2026.121978
-> See [Citation](#-citation) below.
+> Yuan, Y., Zhang, B., Perkins, K., & Cao, F. (2026). *Nonlinear shift along
+> the sensorimotor–association axis in brain responses to task performance.*
+> **NeuroImage**, 334, 121978. https://doi.org/10.1016/j.neuroimage.2026.121978
 
-This project investigates how cortical activation across 360 brain regions responds to working memory (WM) task performance under four visual stimulus categories (**faces, places, tools, and body parts**), using high-quality fMRI data from the Human Connectome Project (HCP). We characterize how the brain–performance relationship changes **non-linearly** and how this change is organized along the **sensorimotor-to-association (S-A) axis**.
+## Overview
 
-## 🧠 Project Motivation
+Cognitive neuroscience often assumes a **linear** relationship between brain
+activation and task performance, yet reported findings conflict. Using the
+Human Connectome Project (HCP) working-memory task, we model activation in each
+of the 360 HCP-MMP cortical parcels as a **nonlinear** function of individual
+task performance and ask whether the *shape* of that function varies
+systematically along the **sensorimotor–association (S-A) axis** and across
+four visual stimulus categories (faces, places, tools, body parts).
 
-Cognitive neuroscience often assumes a *linear* relationship between brain activation and task performance, yet findings conflict across studies. We hypothesized that, across a full range of performance, the relationship may be **non-linear**, and that the form of this relationship varies **systematically along the S-A axis** — with higher-rank association regions showing greater concavity (an inverted-U) than lower-rank sensorimotor regions. We further asked whether this pattern is modulated by visual stimulus category.
+Key findings: higher-rank (association) regions show greater **concavity**
+(inverted-U) with performance — but only in the face and body-part conditions;
+in the place condition many lower-rank regions show a **convex** (U-shaped)
+pattern; and inflection points sit above average performance for concave
+regions and below it for convex regions.
 
-## 🔑 Key Findings
+## Analysis pipeline
 
-- A **gradual shift along the S-A axis**: higher-rank regions show greater concavity (inverted-U) than lower-rank regions — but **only in the face and body-part conditions**.
-- In the **place** condition, many regions instead show a **convex** (U-shaped) pattern; in **tool/place**, few high-order regions engage, so the S-A correlation is absent.
-- **Inflection points** sit *above* average performance in concave regions and *below* average in convex regions.
-- Reveals a **novel principled mapping from brain topology (S-A rank) to brain function** in response to task proficiency.
+| Stage | What it does | Code |
+|-------|--------------|------|
+| 1. GAM significance | Region-wise `Activation ~ s(BIS) + Gender + Age`; ANOVA-based smooth test + FDR correction | `R/gam/run_gam_significance.R`, `R/gam/gam_functions.R` |
+| 2. Model selection | AIC grid search over the smooth basis `k` and penalty order `m` | `R/gam/model_selection_aic.R` |
+| 3. Derivatives | Bootstrap significance of the mean 1st/2nd derivative → direction & curvature per parcel | `R/derivatives/bootstrap_derivatives.R` |
+| 3b. Robustness | Nonparametric derivative cross-check (categorical regression splines / local polynomial) | `R/derivatives/crs_spline_derivatives.R`, `R/derivatives/local_poly_derivatives.R`, `R/derivatives/boot_der.R` |
+| 4. Curve / brain maps | Fitted GAM curves; cortical surface maps of response type | `R/gam/plot_gam.R`, `R/brainmap/region_type_brainmap.R` |
+| 5. Linearity filter | Gaussian Mixture Model to drop near-linear (≈0 second-derivative) parcels | `python/01_gmm_linearity_filter.ipynb` |
+| 6. S-A correlation | Spearman correlation between nonlinearity and S-A rank | `python/02_sa_rank_correlation.ipynb` |
+| 7. Permutation tests | Label-shuffling tests comparing S-A ranks / curvature counts across conditions | `python/03_permutation_tests.ipynb` |
+| 8. Inflection points | Locate and compare turning points of concave vs. convex curves | `python/04_inflection_points.ipynb` |
+| 9. t-test / ANOVA | Behavioral and inflection-point group comparisons | `python/05_ttest_anova.ipynb` |
+| 10. ML decoding | LASSO / logistic / SVR decoding of performance from activation | `python/06_ml_decoding.ipynb` |
+| 11. Replication | Re-run the S-A correlation on two random split-half subsamples | `python/07_random_split_replication.ipynb` |
 
-## 📊 Methodology
-
-- **Data Source:** HCP task-fMRI data (MSM-All registered, HCP-MMP 1.0 parcellation, 360 parcels)
-- **Behavioral Measure:** BIS (Balanced Integration Score) = standardized accuracy − standardized RT, robust to speed–accuracy trade-offs
-- **Modeling:** Region-wise Generalized Additive Models — `Activation ~ s(BIS) + Gender + Age`
-- **Significance:** ANOVA-based likelihood ratio test (`anova.gam`) with False Discovery Rate (FDR) correction (P_FDR < 0.05)
-- **Pattern classification:** First- and second-order derivatives of the fitted curves, with a Gaussian Mixture Model (GMM) separating linear vs. non-linear regions → six response types (linear/concave/convex × increase/decrease)
-- **S-A axis:** Sensorimotor-Association ranking following Sydnor et al. (2021)
-
-## 📁 Project Structure
+## Repository layout
 
 ```
-├── BrainMap/
-│   └── region_type.R        # Brain region visualization using ggseg and ggplot2
-│
-├── GAM/
-│   ├── aic.R                # AIC-based model selection
-│   ├── fdr_correction.R     # ANOVA-based testing and FDR correction for GAM models
-│   ├── gam_functions.R      # Helper functions for GAM fitting, derivative calculation, etc.
-│   └── plot_gam.R           # Visualization of fitted GAM curves and scatter plots
+.
+├── R/                         # GAM modeling, derivatives, brain maps (run from repo root)
+│   ├── config.R               # DATA_DIR / RESULTS_DIR convention
+│   ├── gam/                   # GAM fitting, significance, model selection, plotting
+│   ├── derivatives/           # bootstrap & nonparametric derivative tests
+│   └── brainmap/              # ggseg cortical surface maps
+├── python/                    # Jupyter notebooks for the downstream analyses
+├── data/                      # data template + how to obtain the HCP data (inputs git-ignored)
+└── results/                   # generated outputs (git-ignored)
 ```
 
-## 📌 Dependencies
+## Data availability
 
-- R (≥ 4.0)
-- `mgcv`
-- `ggplot2`
-- `ggseg`
-- `ggpubr`
-- `dplyr`, `purrr`, `tidyr`
-- Optional: `fdrtool`, `boot` for significance testing
+Data are from the **HCP Young Adult dataset (S1200)** and are **not** included
+here, per the HCP Data Use Terms. See [`data/README.md`](data/README.md) for
+how to obtain the data and the expected input schema; `data/template_WM_2bk.csv`
+shows the column layout with synthetic rows.
 
-## 📈 Example Output
+## Requirements
 
-- Cortical maps showing region-wise effect size and derivative-based region-type classifications
-- GAM fit results
-- GAM-fitted activation curves by BIS
+- **R** (≥ 4.0): `mgcv`, `gratia`, `dplyr`, `tidyr`, `stringr`, `boot`,
+  `ggplot2`, `ggseg`, `ggsegGlasser`, `crs`, `parabar`, `doParabar`, `foreach`
+- **Python** (≥ 3.9): see [`requirements.txt`](requirements.txt)
 
-## 📂 Data Availability
+R scripts are designed to be run from the repository root (e.g.
+`Rscript R/gam/run_gam_significance.R`). Inputs are read from `data/` and
+outputs written to `results/`.
 
-Data are from the **Human Connectome Project (HCP) Young Adult dataset (S1200 release)**, publicly available under the HCP Open Access and Restricted Access Data Use Terms. This repository contains the analysis code; it does not redistribute HCP data.
+## Citation
 
-## 📄 Citation
+If you use this code, please cite the paper above.
 
-If you use any part of the code, methods, or findings, please cite:
+## Contact
 
-> Yuan, Y., Zhang, B., Perkins, K., & Cao, F. (2026). Nonlinear shift along the
-> sensorimotor-association-axis in brain responses to task performance.
-> *NeuroImage, 334*, 121978. https://doi.org/10.1016/j.neuroimage.2026.121978
-
-**BibTeX:**
-
-```bibtex
-@article{yuan2026nonlinear,
-  title     = {Nonlinear shift along the sensorimotor-association-axis in brain responses to task performance},
-  author    = {Yuan, Yuqi and Zhang, Bohan and Perkins, Kyle and Cao, Fan},
-  journal   = {NeuroImage},
-  volume    = {334},
-  pages     = {121978},
-  year      = {2026},
-  publisher = {Elsevier},
-  doi       = {10.1016/j.neuroimage.2026.121978}
-}
-```
-
-## 🙏 Acknowledgments
-
-- Human Connectome Project (HCP) for data access
-- HCP-MMP 1.0 parcellation atlas (Glasser et al., 2016)
-- R packages: `mgcv`, `ggseg`, `ggplot2`, etc.
-
-## 📬 Contact
-
-- **Yuqi Yuan** (first author) — u3597424@connect.hku.hk — [@RichardYuan04](https://github.com/RichardYuan04)
-- **Fan Cao** (corresponding author) — fancao@hku.hk
+- **Yuqi Yuan** — u3597424@connect.hku.hk — [RichardYuan04](https://github.com/RichardYuan04)
 - **Bohan Zhang** — zhangbohan@chd.edu.cn
 
----
+## License
 
-This repository accompanies our *NeuroImage* (2026) paper. Released under CC BY 4.0 — please cite as above if you use the code, methods, or results.
+Code released under the [MIT License](LICENSE).

@@ -1,3 +1,14 @@
+# ---------------------------------------------------------------------------
+# Core GAM helper functions (mgcv) shared across the analysis scripts.
+#
+# These adapt the modelling utilities from Sydnor et al. (2021) for the
+# region-wise activation ~ s(BIS) + covariates models used in this project.
+# Provides routines to: fit the performance smooth and extract its statistics
+# (partial R-squared, ANOVA p-value), draw posterior smooths, test a covariate
+# of interest, fit a factor-smooth interaction, and compute first/second
+# smooth derivatives. source() this file before calling the functions.
+# ---------------------------------------------------------------------------
+
 library(readxl)
 library(tidyr)
 library(mgcv)

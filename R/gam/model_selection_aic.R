@@ -1,12 +1,22 @@
-# set working directory and load libraries
-setwd("~/Desktop/hcp_data/model_comparison")
+# ---------------------------------------------------------------------------
+# GAM smooth-term model selection via AIC.
+#
+# The smooth term s(BIS) is controlled by two mgcv parameters: k (basis
+# dimension / complexity) and m (penalty order; m = 4 is required to estimate
+# a stable second derivative). Because the same (k, m) must be applied to all
+# parcels, we fit every (k, m) combination for every ROI, pick the AIC winner
+# per ROI, and count how many ROIs each combination wins. Run from repo root.
+# ---------------------------------------------------------------------------
+
 library(mgcv)
 library(dplyr)
 library(tidyr)
 
-# Read data
-face  <- read.csv("~/Desktop/hcp_data/WM_Face_2bk_cleaned.csv")
-place <- read.csv("~/Desktop/hcp_data/WM_Place_2bk_cleaned.csv")
+source("R/config.R")
+
+# Read data (place the cleaned CSVs in DATA_DIR; see data/README.md)
+face  <- read.csv(data_path("WM_Face_2bk_cleaned.csv"))
+place <- read.csv(data_path("WM_Place_2bk_cleaned.csv"))
 
 # function to perform k & m selection for one dataset with progress bar
 run_km_selection <- function(dat, k.values, m.values, covariates=c("Gender","Age")) {
@@ -83,4 +93,4 @@ wins_all <- full_join(wins_face, wins_place, by=c("k", "m")) %>%
 
 # display and save
 print(wins_all)
-write.csv(wins_all, "km_selection_wins.csv", row.names=FALSE)
+write.csv(wins_all, result_path("km_selection_wins.csv"), row.names=FALSE)

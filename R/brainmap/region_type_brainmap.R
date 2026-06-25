@@ -1,21 +1,31 @@
-#Region type graph creation
+# ---------------------------------------------------------------------------
+# Cortical surface maps of parcel response type (ggseg + Glasser HCP-MMP).
+#
+# Each parcel is classified into one of six response patterns from the sign
+# and magnitude of its mean first and second derivatives (linear / concave /
+# convex x increase / decrease), then painted onto the cortical surface.
+# Input CSVs are the per-parcel derivative results produced by
+# bootstrap_derivatives.R (one file per condition). Figures are written to
+# RESULTS_DIR. Run from the repository root.
+# ---------------------------------------------------------------------------
+
 library(dplyr)
 library(ggseg)
 library(ggsegGlasser)
 library(ggplot2)
 library(stringr)
 
+source("R/config.R")
 
-# Load the glasser atlas
-##region type, only WM tasks
-setwd("C:\\HCP_processing\\figure\\region_type")
+# Load the Glasser atlas labels
 all_brain_areas <- glasser$data$label #get parcels' labels
 
+# Per-condition derivative result files (see bootstrap_derivatives.R output).
 data_paths <- list(
-  WM_Body_2bk = "C:\\HCP_processing\\HCP_significance\\bootstrap_derivatives_refit[without_BIS_outlier]\\WM_Body_2bk_Sig_gam_der.csv",
-  WM_Place_2bk = "C:\\HCP_processing\\HCP_significance\\bootstrap_derivatives_refit[without_BIS_outlier]\\WM_Place_2bk_Sig_gam_der.csv",
-  WM_Face_2bk = "C:\\HCP_processing\\HCP_significance\\bootstrap_derivatives_refit[without_BIS_outlier]\\WM_Face_2bk_Sig_gam_der.csv",
-  WM_Tool_2bk = "C:\\HCP_processing\\HCP_significance\\bootstrap_derivatives_refit[without_BIS_outlier]\\WM_Tool_2bk_Sig_gam_der.csv"
+  WM_Body_2bk  = data_path("WM_Body_2bk_Sig_gam_der.csv"),
+  WM_Place_2bk = data_path("WM_Place_2bk_Sig_gam_der.csv"),
+  WM_Face_2bk  = data_path("WM_Face_2bk_Sig_gam_der.csv"),
+  WM_Tool_2bk  = data_path("WM_Tool_2bk_Sig_gam_der.csv")
 )
 
 
@@ -92,7 +102,7 @@ for (name in names(data_paths)) {
   
   # Save the image
   ggsave(
-    filename = paste0(name, "_region_type_brainmap.jpg"),
+    filename = result_path(paste0(name, "_region_type_brainmap.jpg")),
     plot = p,
     device = "jpg",
     dpi = 500,
@@ -114,10 +124,10 @@ library(stringr)
 
 # Data path for sig_gam_der:
 data_paths <- list(
-  WM_Body_2bk = "C:\\HCP_processing\\HCP_significance\\bootstrap_derivatives_refit[without_BIS_outlier]\\WM_Body_2bk_Sig_gam_der.csv",
-  WM_Place_2bk = "C:\\HCP_processing\\HCP_significance\\bootstrap_derivatives_refit[without_BIS_outlier]\\WM_Place_2bk_Sig_gam_der.csv",
-  WM_Face_2bk = "C:\\HCP_processing\\HCP_significance\\bootstrap_derivatives_refit[without_BIS_outlier]\\WM_Face_2bk_Sig_gam_der.csv",
-  WM_Tool_2bk = "C:\\HCP_processing\\HCP_significance\\bootstrap_derivatives_refit[without_BIS_outlier]\\WM_Tool_2bk_Sig_gam_der.csv"
+  WM_Body_2bk  = data_path("WM_Body_2bk_Sig_gam_der.csv"),
+  WM_Place_2bk = data_path("WM_Place_2bk_Sig_gam_der.csv"),
+  WM_Face_2bk  = data_path("WM_Face_2bk_Sig_gam_der.csv"),
+  WM_Tool_2bk  = data_path("WM_Tool_2bk_Sig_gam_der.csv")
 )
 
 # Define function: Generate brain map for a single brain region
@@ -210,7 +220,7 @@ for (name in names(data_paths)) {
   
   # Save the image
   ggsave(
-    filename = paste0(target_label, "_", name, "_brainmap.jpg"),
+    filename = result_path(paste0(target_label, "_", name, "_brainmap.jpg")),
     plot = p,
     device = "jpg",
     dpi = 500,
@@ -223,5 +233,5 @@ for (name in names(data_paths)) {
 
 
 # Example usage
-WM_Place_2bk <- read.csv("C:\\HCP_processing\\HCP_significance\\bootstrap_derivatives_refit[without_BIS_outlier]\\WM_Place_2bk_Sig_gam_der.csv")
+WM_Place_2bk <- read.csv(data_path("WM_Place_2bk_Sig_gam_der.csv"))
 plot_single_region(input_label = "lh_L_V1", dataset_name = "WM_Place_2bk")

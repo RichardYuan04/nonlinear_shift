@@ -1,8 +1,20 @@
+# ---------------------------------------------------------------------------
+# Plot a fitted GAM activation-performance curve for a single parcel.
+#
+# plot_gam() fits Activation ~ s(BIS, k, m) + Gender + Age, predicts the
+# smooth across the observed BIS range (covariates held at median / modal
+# level) and overlays the fitted curve and 95% CI on the raw scatter. Run
+# from repo root. See data/README.md for the expected input columns.
+# ---------------------------------------------------------------------------
+
 library(mgcv)
 library(ggplot2)
+library(dplyr)
 
-place = read.csv("C:\\HCP_processing\\BIS_outlier_removed\\WM_Place_2bk_cleaned.csv")
-face = read.csv("C:\\HCP_processing\\BIS_outlier_removed\\WM_Face_2bk_cleaned.csv")
+source("R/config.R")
+
+place = read.csv(data_path("WM_Place_2bk_cleaned.csv"))
+face  = read.csv(data_path("WM_Face_2bk_cleaned.csv"))
 
 
 # The function fits a GAM model to the data and generates a plot of the fitted values along with the confidence intervals.

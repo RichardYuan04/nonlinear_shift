@@ -1,0 +1,30 @@
+# Subject-level / HCP-derived data — never commit (HCP Data Use Terms)
+data/*
+!data/README.md
+!data/template_WM_2bk.csv
+
+# Generated outputs
+results/
+*.jpg
+*.png
+*.pdf
+*.html
+
+# R
+.Rhistory
+.RData
+.Rapp.history
+.Rproj.user/
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
